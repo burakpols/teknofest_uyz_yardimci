@@ -1,20 +1,14 @@
-from ast import arg
 from typing import List
 import numpy as np
 from glob import glob
 import cv2
 from tqdm import tqdm
 import os
-import argparse
 
 
 class OtoLabel:
-    """
-    Run otolabel function for labeling pists.
-    """
-
     def __init__(self) -> None:
-        self.clahe = cv2.createCLAHE(clipLimit = 5)
+        pass
 
     def xyxy2xywhn(self, xyxy: np.ndarray, w: int = 640, h: int = 640) -> np.ndarray:
         """
@@ -93,11 +87,11 @@ class OtoLabel:
             Exception: There are only two classes, "0" and "1". Otherwise exception.
         """
         if class_ == "0":
-            lower= np.array([81,31,235])
-            upper= np.array([102,51,255])
+            lower = np.array([78, 51, 228])
+            upper = np.array([118, 91, 255])
         elif class_ == "1":
-            lower= np.array([155,102,215])
-            upper= np.array([194,142,255])
+            lower = np.array([154, 152, 176])
+            upper = np.array([194, 192, 216])
 
         else:
             raise Exception("Undefined class.")
@@ -115,23 +109,17 @@ class OtoLabel:
         for image in tqdm(images):
             img_name = image.rsplit("\\")[-1].rsplit(".")[0]
             img = cv2.imread(image)
-            img= cv2.cvtColor(img,cv2.COLOR_BGR2LAB)
-            blur = cv2.GaussianBlur(img, (55, 55), 0)
-            l,a,b= cv2.split(blur)
-            cl= self.clahe.apply(l)
-            img= cv2.merge((cl,a,b))
             h, w, ch = img.shape
-            
+            blur = cv2.GaussianBlur(img, (55, 55), 0)
 
-            img = cv2.cvtColor(img, cv2.COLOR_LAB2RGB)
-            hsv= cv2.cvtColor(img,cv2.COLOR_RGB2HSV)
+            hsv = cv2.cvtColor(blur, cv2.COLOR_BGR2HSV)
             mask = cv2.inRange(hsv, lower, upper)
             res = cv2.bitwise_and(img, img, mask=mask)
 
-            gray = cv2.cvtColor(res, cv2.COLOR_RGB2GRAY)
+            gray = res[:, :, 0]
 
-            kernelSize = (11, 11)
-            opIterations = 5
+            kernelSize = (7, 7)
+            opIterations = 3
             morphKernel = cv2.getStructuringElement(cv2.MORPH_RECT, kernelSize)
             dilateImage = cv2.morphologyEx(
                 gray, cv2.MORPH_DILATE, morphKernel, None, None, opIterations, cv2.BORDER_REFLECT101)
@@ -149,22 +137,7 @@ class OtoLabel:
             self.writer(xywhn, class_, save)
 
 
-def parseOpt() -> arg:
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--images-path', type=str,
-                        default='./images', help='image path')
-    parser.add_argument('--object-class', type=str, default='0',
-                        help='class for save txt')
-    parser.add_argument('--save-path', type=str,
-                        default='./labels', help='labels path txt')
-    parser.add_argument('--image-type', type=str,
-                        default='jpg', help='image type')
-    opt = parser.parse_args()
-    return opt
-
-
 if __name__ == "__main__":
-    opt = parseOpt()
     ol = OtoLabel()
-    ol.otoLabel(opt.images_path, opt.object_class, opt.save_path, opt.image_type)
-
+    ol.otoLabel("./images", "0", "./labels")
+    ol.otoLabel("./images", "1", "./labels")
