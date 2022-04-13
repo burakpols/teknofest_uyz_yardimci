@@ -1,12 +1,18 @@
+from ast import arg
 from typing import List
 import numpy as np
 from glob import glob
 import cv2
 from tqdm import tqdm
 import os
+import argparse
 
 
 class OtoLabel:
+    """
+    Run otolabel function for labeling pists.
+    """
+
     def __init__(self) -> None:
         pass
 
@@ -87,11 +93,11 @@ class OtoLabel:
             Exception: There are only two classes, "0" and "1". Otherwise exception.
         """
         if class_ == "0":
-            lower = np.array([78, 51, 228])
-            upper = np.array([118, 91, 255])
+            lower= np.array([18,20,195])
+            upper= np.array([42,78,255])
         elif class_ == "1":
-            lower = np.array([154, 152, 176])
-            upper = np.array([194, 192, 216])
+            lower= np.array([120,50,160])
+            upper= np.array([135,170,245])
 
         else:
             raise Exception("Undefined class.")
@@ -109,20 +115,17 @@ class OtoLabel:
         for image in tqdm(images):
             img_name = image.rsplit("\\")[-1].rsplit(".")[0]
             img = cv2.imread(image)
-            h, w, ch = img.shape
-            blur = cv2.GaussianBlur(img, (55, 55), 0)
-
-            hsv = cv2.cvtColor(blur, cv2.COLOR_BGR2HSV)
+            blur = cv2.GaussianBlur(img, (131, 131), 0)
+            hsv= cv2.cvtColor(blur,cv2.COLOR_RGB2HSV)
             mask = cv2.inRange(hsv, lower, upper)
-            res = cv2.bitwise_and(img, img, mask=mask)
-
-            gray = res[:, :, 0]
-
-            kernelSize = (7, 7)
-            opIterations = 3
+            res = cv2.bitwise_and(blur, blur, mask=mask)      
+            h, w, ch = img.shape
+            gray = res[:,:,0]
+            kernelSize = (7, 9)
+            opIterations = 5
             morphKernel = cv2.getStructuringElement(cv2.MORPH_RECT, kernelSize)
             dilateImage = cv2.morphologyEx(
-                gray, cv2.MORPH_DILATE, morphKernel, None, None, opIterations, cv2.BORDER_REFLECT101)
+                gray, cv2.MORPH_DILATE, morphKernel, None, None, opIterations, cv2.BORDER_CONSTANT)
 
             contours, hierarchy = cv2.findContours(
                 dilateImage, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -137,7 +140,22 @@ class OtoLabel:
             self.writer(xywhn, class_, save)
 
 
+def parseOpt() -> arg:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--images-path', type=str,
+                        default='./images', help='image path')
+    parser.add_argument('--object-class', type=str, default='0',
+                        help='class for save txt')
+    parser.add_argument('--save-path', type=str,
+                        default='./labels', help='labels path txt')
+    parser.add_argument('--image-type', type=str,
+                        default='jpg', help='image type')
+    opt = parser.parse_args()
+    return opt
+
+
 if __name__ == "__main__":
+    opt = parseOpt()
     ol = OtoLabel()
-    ol.otoLabel("./images", "0", "./labels")
-    ol.otoLabel("./images", "1", "./labels")
+    ol.otoLabel(opt.images_path, opt.object_class, opt.save_path, opt.image_type)
+
