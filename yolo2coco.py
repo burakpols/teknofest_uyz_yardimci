@@ -12,8 +12,8 @@ def xywhn2xywh(x, w=640, h=640):
     y = [0, 0, 0, 0]
     y[0] = int(w * (x[0] - x[2] / 2))   # top left x
     y[1] = int(h * (x[1] - x[3] / 2))   # top left y
-    y[2] = int(w * (x[0] + x[2] / 2))-y[0]   # w bbox
-    y[3] = int(h * (x[1] + x[3] / 2))-y[1]   # h bbox
+    y[2] = int(w * (x[0] + x[2] / 2)-x[0])   # w bbox
+    y[3] = int(h * (x[1] + x[3] / 2)-x[1])   # h bbox
     return y
 
 
@@ -44,8 +44,13 @@ def yolo2coco(images_path: str, labels_path: str, save_path: str = "./onurvalpis
             line = line.rsplit(" ")
             if convert:
                 bbox = [float(x) for x in line[1:]]
+                if len(bbox)<4:
+                    print(image)
+                    break
+                
                 bbox = xywhn2xywh(bbox, width, height)
-                line = [float(line[0]), *bbox]
+                line = [int(line[0]), *bbox]
+                
             coco_image.add_annotation(
                 CocoAnnotation(
                     bbox=[int(line[1]), int(line[2]),
@@ -63,11 +68,11 @@ def yolo2coco(images_path: str, labels_path: str, save_path: str = "./onurvalpis
 def parseOpt():
     parser = argparse.ArgumentParser()
     parser.add_argument('--images-path', type=str,
-                        default='./images', help='image path')
-    parser.add_argument('--labels-path', type=str, default='./labels',
+                        default='../dataset/visdrone/VisDrone2019-DET-val/images', help='image path')
+    parser.add_argument('--labels-path', type=str, default='../dataset/visdrone/VisDrone2019-DET-val/labels',
                         help='labels path')
     parser.add_argument('--save-path', type=str,
-                        default='./onurvalpist.json', help='labeled images save path')
+                        default='../dataset/visdrone/VisDrone2019-DET-train/visdrone_val.json', help='labeled images save path')
     parser.add_argument('--image-type', type=str,
                         default='jpg', help='image type')
     parser.add_argument('--yaml-file', type=str,

@@ -2,9 +2,9 @@ import os
 import pandas as pd
 from PIL import Image
 from tqdm import tqdm
-YOLO_LABELS_PATH = "../dataset/visdrone/VisDrone2019-DET-test/labels"
-VISANN_PATH = "../dataset/visdrone/VisDrone2019-DET-test/annotations/"
-VISIMG_PATH = "../dataset/visdrone/VisDrone2019-DET-test/images/"
+YOLO_LABELS_PATH = "../dataset/visdrone/VisDrone2019-test/labels"
+VISANN_PATH = "../dataset/visdrone/VisDrone2019-test/annotations/"
+VISIMG_PATH = "../dataset/visdrone/VisDrone2019-test/images/"
 
 def convert(bbox, img_size):
     #bbox top_left_x top_left_y width height
@@ -12,13 +12,11 @@ def convert(bbox, img_size):
     dh = 1/(img_size[1])
     x = bbox[0] + bbox[2]/2
     y = bbox[1] + bbox[3]/2
-    x = x * dw
-    y = y * dh
-    w = bbox[2] * dw
-    h = bbox[3] * dh
+    w = bbox[2] 
+    h = bbox[3] 
     return (x,y,w,h) 
 
-def ChangeToYolo5():
+def ChangeToYolo5(toyolo:bool=False):
     if not os.path.exists(YOLO_LABELS_PATH):
         os.makedirs(YOLO_LABELS_PATH)
     print(len(os.listdir(VISANN_PATH)))
@@ -30,10 +28,15 @@ def ChangeToYolo5():
         img = Image.open(image_path)
         img_size = img.size
         for row in bbox:
-            if(row[4]==1 and 0<row[5]<11):   
-                label = convert(row[:4], img_size)
-                out_file.write(str(row[5]-1) + " " + " ".join(str(f'{x:.6f}') for x in label) + '\n')
+            if(row[4]==1 and 0<row[5]<11):
+                if toyolo:   
+                    label = convert(row[:4], img_size)
+                    out_file.write(str(int(row[5]-1)) + " " + " ".join(str(f'{x:.6f}') for x in label) + '\n')
+                else:
+                    label= [int(x) for x in row[:4]]
+                    out_file.write(str(int(row[5]-1)) + " " + " ".join(str(f'{int(x)}') for x in label) + '\n')
+                
         out_file.close()
 
 if __name__ == '__main__':
-    ChangeToYolo5()
+    ChangeToYolo5(False)

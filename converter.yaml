@@ -1,0 +1,10 @@
+
+# datasets: which folders convert in dataset. ['train', 'valid'].
+# names: Class names like yolo data.yaml. ['a','b'].
+# class_num: Determine new class numbers for each classes in the correct order respect to the names.['0','0'] for ['a','b']
+# target_folder: Save folder path for new labels.
+
+datasets: ["train"]
+names: ["12","14","13","15"]
+class_num: [0,1,0,1]
+target_folder: "A:/teknofest/ulasim/dataset/pistdataset/pistler/sss.v2-pistlerv2.yolov5pytorch/labels"
