@@ -56,11 +56,12 @@ class LabeledImgSaver:
         labels = glob(label_path+"*.txt")
 
         for image in tqdm(images):
-            img_name = image.rsplit("\\")[-1].rsplit(".")[0]
+            img_name_=image.rsplit("\\")[-1]
+            img_name = image.rsplit("\\")[-1].rsplit(".")[-2]
             img = cv2.imread(image)
             H, W, C = img.shape
             for label in labels:
-                label_name = label.rsplit("\\")[-1].rsplit(".")[0]
+                label_name = label.rsplit("\\")[-1].rsplit(".")[-2]
 
                 if img_name == label_name:
                     txt = open(label, "r").read()
@@ -90,7 +91,7 @@ class LabeledImgSaver:
                         img = cv2.putText(
                             img, c, (xyxy[0], xyxy[1]-10), self.font, 1, color, 2, cv2.LINE_AA)
 
-                    cv2.imwrite(save_path+img_name+".jpg", img)
+                    cv2.imwrite(save_path+img_name_, img)
                 else:
                     continue
 
