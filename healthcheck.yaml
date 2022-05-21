@@ -1,0 +1,3 @@
+train: A:/teknofest/ulasim/yardimci_kodlar/dataset/images
+nc: 2
+names: ['uap', 'uai']
